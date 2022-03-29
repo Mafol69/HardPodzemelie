@@ -3843,846 +3843,752 @@ lastTapTime=-1E4;return"double-tap"}else{lastTapX=this._x;lastTapY=this._y;lastT
 }
 
 {
+'use strict';const C3=self.C3;C3.Plugins.Text=class TextPlugin extends C3.SDKPluginBase{constructor(opts){super(opts)}Release(){super.Release()}};
+
+}
+
+{
+'use strict';const C3=self.C3;C3.Plugins.Text.Type=class TextType extends C3.SDKTypeBase{constructor(objectClass){super(objectClass)}Release(){super.Release()}OnCreate(){}LoadTextures(renderer){}ReleaseTextures(){}};
+
+}
+
+{
+'use strict';const C3=self.C3;const C3X=self.C3X;const TEMP_COLOR_ARRAY=[0,0,0];const TEXT=0;const ENABLE_BBCODE=1;const FONT=2;const SIZE=3;const LINE_HEIGHT=4;const BOLD=5;const ITALIC=6;const COLOR=7;const HORIZONTAL_ALIGNMENT=8;const VERTICAL_ALIGNMENT=9;const WRAPPING=10;const INITIALLY_VISIBLE=11;const ORIGIN=12;const HORIZONTAL_ALIGNMENTS=["left","center","right"];const VERTICAL_ALIGNMENTS=["top","center","bottom"];const WORD_WRAP=0;const CHARACTER_WRAP=1;const tempRect=new C3.Rect;
+const tempQuad=new C3.Quad;const tempColor=new C3.Color;
+C3.Plugins.Text.Instance=class TextInstance extends C3.SDKWorldInstanceBase{constructor(inst,properties){super(inst);this._text="";this._enableBBcode=true;this._faceName="Arial";this._ptSize=12;this._lineHeightOffset=0;this._isBold=false;this._isItalic=false;this._color=C3.New(C3.Color);this._horizontalAlign=0;this._verticalAlign=0;this._wrapByWord=true;this._typewriterStartTime=-1;this._typewriterEndTime=-1;this._typewriterLength=0;this._rendererText=C3.New(C3.Gfx.RendererText,this._runtime.GetRenderer(),
+{timeout:5});this._rendererText.ontextureupdate=()=>this._runtime.UpdateRender();this._rendererText.SetIsAsync(false);if(properties){this._text=properties[TEXT];this._enableBBcode=!!properties[ENABLE_BBCODE];this._faceName=properties[FONT];this._ptSize=properties[SIZE];this._lineHeightOffset=properties[LINE_HEIGHT];this._isBold=!!properties[BOLD];this._isItalic=!!properties[ITALIC];this._horizontalAlign=properties[HORIZONTAL_ALIGNMENT];this._verticalAlign=properties[VERTICAL_ALIGNMENT];this._wrapByWord=
+properties[WRAPPING]===WORD_WRAP;const v=properties[COLOR];this._color.setRgb(v[0],v[1],v[2]);this.GetWorldInfo().SetVisible(properties[INITIALLY_VISIBLE])}this._UpdateTextSettings()}Release(){this._CancelTypewriter();this._rendererText.Release();this._rendererText=null;super.Release()}_UpdateTextSettings(){const rendererText=this._rendererText;rendererText.SetText(this._text);rendererText.SetBBCodeEnabled(this._enableBBcode);rendererText.SetFontName(this._faceName);rendererText.SetLineHeight(this._lineHeightOffset);
+rendererText.SetBold(this._isBold);rendererText.SetItalic(this._isItalic);rendererText.SetColor(this._color);rendererText.SetHorizontalAlignment(HORIZONTAL_ALIGNMENTS[this._horizontalAlign]);rendererText.SetVerticalAlignment(VERTICAL_ALIGNMENTS[this._verticalAlign]);rendererText.SetWordWrapMode(this._wrapByWord?"word":"character")}_UpdateTextSize(){const wi=this.GetWorldInfo();this._rendererText.SetFontSize(this._ptSize);this._rendererText.SetFontSizeScale(wi.GetSceneGraphScale());const layer=wi.GetLayer();
+const textZoom=layer.GetRenderScale()*layer.Get2DScaleFactorToZ(wi.GetTotalZElevation());this._rendererText.SetSize(wi.GetWidth(),wi.GetHeight(),textZoom)}Draw(renderer){const wi=this.GetWorldInfo();this._UpdateTextSize();const texture=this._rendererText.GetTexture();if(!texture)return;const layer=wi.GetLayer();if(wi.GetAngle()===0&&layer.GetAngle()===0&&wi.GetTotalZElevation()===0&&!wi.HasMesh()&&layer.RendersIn2DMode()){const quad=wi.GetBoundingQuad();const [dl,dt]=layer.LayerToDrawSurface(quad.getTlx(),
+quad.getTly());const [dr,db]=layer.LayerToDrawSurface(quad.getBrx(),quad.getBry());const offX=dl-Math.round(dl);const offY=dt-Math.round(dt);tempRect.set(dl,dt,dr,db);tempRect.offset(-offX,-offY);tempQuad.setFromRect(tempRect);const [rtWidth,rtHeight]=renderer.GetRenderTargetSize(renderer.GetRenderTarget());this._runtime.GetCanvasManager().SetDeviceTransform(renderer,rtWidth,rtHeight);renderer.SetTexture(texture);renderer.Quad3(tempQuad,this._rendererText.GetTexRect());layer._SetTransform(renderer)}else{renderer.SetTexture(texture);
+if(wi.HasMesh())this._DrawMesh(wi,renderer);else this._DrawStandard(wi,renderer)}}_DrawStandard(wi,renderer){let quad=wi.GetBoundingQuad();if(this._runtime.IsPixelRoundingEnabled())quad=this._PixelRoundQuad(quad);renderer.Quad3(quad,this._rendererText.GetTexRect())}_DrawMesh(wi,renderer){const transformedMesh=wi.GetTransformedMesh();if(wi.IsMeshChanged()){wi.CalculateBbox(tempRect,tempQuad,false);let quad=tempQuad;if(this._runtime.IsPixelRoundingEnabled())quad=this._PixelRoundQuad(quad);transformedMesh.CalculateTransformedMesh(wi.GetSourceMesh(),
+quad,this._rendererText.GetTexRect());wi.SetMeshChanged(false)}transformedMesh.Draw(renderer)}_PixelRoundQuad(quad){const offX=quad.getTlx()-Math.round(quad.getTlx());const offY=quad.getTly()-Math.round(quad.getTly());if(offX===0&&offY===0)return quad;else{tempQuad.copy(quad);tempQuad.offset(-offX,-offY);return tempQuad}}GetCurrentSurfaceSize(){const texture=this._rendererText.GetTexture();if(texture)return[texture.GetWidth(),texture.GetHeight()];else return[100,100]}GetCurrentTexRect(){return this._rendererText.GetTexRect()}IsCurrentTexRotated(){return false}SaveToJson(){const o=
+{"t":this._text,"c":this._color.toJSON(),"fn":this._faceName,"ps":this._ptSize};if(this._enableBBcode)o["bbc"]=this._enableBBcode;if(this._horizontalAlign!==0)o["ha"]=this._horizontalAlign;if(this._verticalAlign!==0)o["va"]=this._verticalAlign;if(!this._wrapByWord)o["wr"]=this._wrapByWord;if(this._lineHeightOffset!==0)o["lho"]=this._lineHeightOffset;if(this._isBold)o["b"]=this._isBold;if(this._isItalic)o["i"]=this._isItalic;if(this._typewriterEndTime!==-1)o["tw"]={"st":this._typewriterStartTime,"en":this._typewriterEndTime,
+"l":this._typewriterLength};return o}LoadFromJson(o){this._CancelTypewriter();this._text=o["t"],this._color.setFromJSON(o["c"]);this._faceName=o["fn"],this._ptSize=o["ps"];this._enableBBcode=o.hasOwnProperty("bbc")?o["bbc"]:false;this._horizontalAlign=o.hasOwnProperty("ha")?o["ha"]:0;this._verticalAlign=o.hasOwnProperty("va")?o["va"]:0;this._wrapByWord=o.hasOwnProperty("wr")?o["wr"]:true;this._lineHeightOffset=o.hasOwnProperty("lho")?o["lho"]:0;this._isBold=o.hasOwnProperty("b")?o["b"]:false;this._isItalic=
+o.hasOwnProperty("i")?o["i"]:false;if(o.hasOwnProperty("tw")){const tw=o["tw"];this._typewriterStartTime=tw["st"];this._typewriterEndTime=tw["en"];this._typewriterLength=tw["l"]}this._UpdateTextSettings();if(this._typewriterEndTime!==-1)this._StartTicking()}GetPropertyValueByIndex(index){switch(index){case TEXT:return this._text;case ENABLE_BBCODE:return this._enableBBcode;case FONT:return this._faceName;case SIZE:return this._ptSize;case LINE_HEIGHT:return this._lineHeightOffset;case BOLD:return this._isBold;
+case ITALIC:return this._isItalic;case COLOR:TEMP_COLOR_ARRAY[0]=this._color.getR();TEMP_COLOR_ARRAY[1]=this._color.getG();TEMP_COLOR_ARRAY[2]=this._color.getB();return TEMP_COLOR_ARRAY;case HORIZONTAL_ALIGNMENT:return this._horizontalAlign;case VERTICAL_ALIGNMENT:return this._verticalAlign;case WRAPPING:return this._wrapByWord?CHARACTER_WRAP:WORD_WRAP}}SetPropertyValueByIndex(index,value){switch(index){case TEXT:if(this._text===value)return;this._text=value;this._UpdateTextSettings();break;case ENABLE_BBCODE:if(this._enableBBcode===
+!!value)return;this._enableBBcode=!!value;this._UpdateTextSettings();break;case FONT:if(this._faceName===value)return;this._faceName=value;this._UpdateTextSettings();break;case SIZE:if(this._ptSize===value)return;this._ptSize=value;this._UpdateTextSettings();break;case LINE_HEIGHT:if(this._lineHeightOffset===value)return;this._lineHeightOffset=value;this._UpdateTextSettings();break;case BOLD:if(this._isBold===!!value)return;this._isBold=!!value;this._UpdateTextSettings();break;case ITALIC:if(this._isItalic===
+!!value)return;this._isItalic=!!value;this._UpdateTextSettings();break;case COLOR:const c=this._color;const v=value;if(c.getR()===v[0]&&c.getG()===v[1]&&c.getB()===v[2])return;this._color.setRgb(v[0],v[1],v[2]);this._UpdateTextSettings();break;case HORIZONTAL_ALIGNMENT:if(this._horizontalAlign===value)return;this._horizontalAlign=value;this._UpdateTextSettings();break;case VERTICAL_ALIGNMENT:if(this._verticalAlign===value)return;this._verticalAlign=value;this._UpdateTextSettings();break;case WRAPPING:if(this._wrapByWord===
+(value===WORD_WRAP))return;this._wrapByWord=value===WORD_WRAP;this._UpdateTextSettings();break}}SetPropertyColorOffsetValueByIndex(index,r,g,b){if(r===0&&g===0&&b===0)return;switch(index){case COLOR:this._color.addRgb(r,g,b);this._UpdateTextSettings();break}}_SetText(text){if(this._text===text)return;this._text=text;this._rendererText.SetText(text);this._runtime.UpdateRender()}GetText(){return this._text}_StartTypewriter(text,duration){this._SetText(text);this._typewriterStartTime=this._runtime.GetWallTime();
+this._typewriterEndTime=this._typewriterStartTime+duration/this.GetInstance().GetActiveTimeScale();this._typewriterLength=C3.BBString.StripAnyTags(text).length;this._rendererText.SetDrawMaxCharacterCount(0);this._StartTicking()}_CancelTypewriter(){this._typewriterStartTime=-1;this._typewriterEndTime=-1;this._typewriterLength=0;this._rendererText.SetDrawMaxCharacterCount(-1);this._StopTicking()}_FinishTypewriter(){if(this._typewriterEndTime===-1)return;this._CancelTypewriter();this.Trigger(C3.Plugins.Text.Cnds.OnTypewriterTextFinished);
+this._runtime.UpdateRender()}_SetFontFace(face){if(this._faceName===face)return;this._faceName=face;this._rendererText.SetFontName(face);this._runtime.UpdateRender()}_GetFontFace(){return this._faceName}_SetBold(b){b=!!b;if(this._isBold===b)return;this._isBold=b;this._rendererText.SetBold(b);this._runtime.UpdateRender()}_IsBold(){return this._isBold}_SetItalic(i){i=!!i;if(this._isItalic===i)return;this._isItalic=i;this._rendererText.SetItalic(i);this._runtime.UpdateRender()}_IsItalic(){return this._isItalic}_SetFontSize(size){if(this._ptSize===
+size)return;this._ptSize=size;this._runtime.UpdateRender()}_GetFontSize(){return this._ptSize}_SetFontColor(color){if(this._color.equalsIgnoringAlpha(color))return;this._color.copyRgb(color);this._rendererText.SetColor(this._color);this._runtime.UpdateRender()}_GetFontColor(){return this._color}_SetLineHeight(lho){if(this._lineHeightOffset===lho)return;this._lineHeightOffset=lho;this._UpdateTextSettings();this._runtime.UpdateRender()}_GetLineHeight(){return this._lineHeightOffset}_SetHAlign(h){if(this._horizontalAlign===
+h)return;this._horizontalAlign=h;this._UpdateTextSettings();this._runtime.UpdateRender()}_GetHAlign(){return this._horizontalAlign}_SetVAlign(v){if(this._verticalAlign===v)return;this._verticalAlign=v;this._UpdateTextSettings();this._runtime.UpdateRender()}_GetVAlign(){return this._verticalAlign}_SetWrapByWord(w){w=!!w;if(this._wrapByWord===w)return;this._wrapByWord=w;this._UpdateTextSettings();this._runtime.UpdateRender()}_IsWrapByWord(){return this._wrapByWord}_GetTextWidth(){this._UpdateTextSize();
+return this._rendererText.GetTextWidth()}_GetTextHeight(){this._UpdateTextSize();return this._rendererText.GetTextHeight()}Tick(){const wallTime=this._runtime.GetWallTime();if(wallTime>=this._typewriterEndTime){this._CancelTypewriter();this.Trigger(C3.Plugins.Text.Cnds.OnTypewriterTextFinished);this._runtime.UpdateRender()}else{let displayLength=C3.relerp(this._typewriterStartTime,this._typewriterEndTime,wallTime,0,this._typewriterLength);displayLength=Math.floor(displayLength);if(displayLength!==
+this._rendererText.GetDrawMaxCharacterCount()){this._rendererText.SetDrawMaxCharacterCount(displayLength);this._runtime.UpdateRender()}}}GetDebuggerProperties(){const prefix="plugins.text";return[{title:prefix+".name",properties:[{name:prefix+".properties.text.name",value:this._text,onedit:v=>this._SetText(v)}]}]}GetScriptInterfaceClass(){return self.ITextInstance}};const map=new WeakMap;const SCRIPT_HORIZONTAL_ALIGNMENTS=new Map([["left",0],["center",1],["right",2]]);
+const SCRIPT_VERTICAL_ALIGNMENTS=new Map([["top",0],["center",1],["bottom",2]]);const SCRIPT_WRAP_MODES=new Map([["word",true],["character",false]]);
+self.ITextInstance=class ITextInstance extends self.IWorldInstance{constructor(){super();map.set(this,self.IInstance._GetInitInst().GetSdkInstance())}get text(){return map.get(this).GetText()}set text(str){C3X.RequireString(str);const inst=map.get(this);inst._CancelTypewriter();inst._SetText(str)}typewriterText(str,duration){C3X.RequireString(str);C3X.RequireFiniteNumber(duration);const inst=map.get(this);inst._CancelTypewriter();inst._StartTypewriter(str,duration)}typewriterFinish(){map.get(this)._FinishTypewriter()}set fontFace(str){C3X.RequireString(str);
+map.get(this)._SetFontFace(str)}get fontFace(){return map.get(this)._GetFontFace()}set isBold(b){map.get(this)._SetBold(b)}get isBold(){return map.get(this)._IsBold()}set isItalic(i){map.get(this)._SetItalic(i)}get isItalic(){return map.get(this)._IsItalic()}set sizePt(pt){C3X.RequireFiniteNumber(pt);map.get(this)._SetFontSize(pt)}get sizePt(){return map.get(this)._GetFontSize()}set fontColor(arr){C3X.RequireArray(arr);if(arr.length<3)throw new Error("expected 3 elements");tempColor.setRgb(arr[0],
+arr[1],arr[2]);map.get(this)._SetFontColor(tempColor)}get fontColor(){const c=map.get(this)._GetFontColor();return[c.getR(),c.getG(),c.getB()]}set lineHeight(lho){C3X.RequireFiniteNumber(lho);map.get(this)._SetLineHeight(lho)}get lineHeight(){return map.get(this)._GetLineHeight()}set horizontalAlign(str){C3X.RequireString(str);const h=SCRIPT_HORIZONTAL_ALIGNMENTS.get(str);if(typeof h==="undefined")throw new Error("invalid mode");map.get(this)._SetHAlign(h)}get horizontalAlign(){return HORIZONTAL_ALIGNMENTS[map.get(this)._GetHAlign()]}set verticalAlign(str){C3X.RequireString(str);
+const v=SCRIPT_VERTICAL_ALIGNMENTS.get(str);if(typeof v==="undefined")throw new Error("invalid mode");map.get(this)._SetVAlign(v)}get verticalAlign(){return VERTICAL_ALIGNMENTS[map.get(this)._GetVAlign()]}set wordWrapMode(str){C3X.RequireString(str);const isWrapByWord=SCRIPT_WRAP_MODES.get(str);if(typeof isWrapByWord==="undefined")throw new Error("invalid mode");map.get(this)._SetWrapByWord(isWrapByWord)}get wordWrapMode(){return map.get(this)._IsWrapByWord()?"word":"character"}get textWidth(){return map.get(this)._GetTextWidth()}get textHeight(){return map.get(this)._GetTextHeight()}};
+
+}
+
+{
+'use strict';const C3=self.C3;C3.Plugins.Text.Cnds={CompareText(str,caseSensitive){if(caseSensitive)return this._text===str;else return C3.equalsNoCase(this._text,str)},IsRunningTypewriterText(){return this._typewriterEndTime!==-1},OnTypewriterTextFinished(){return true}};
+
+}
+
+{
+'use strict';const C3=self.C3;const tempColor=C3.New(C3.Color);
+C3.Plugins.Text.Acts={SetText(param){this._CancelTypewriter();if(typeof param==="number"&&param<1E9)param=Math.round(param*1E10)/1E10;this._SetText(param.toString())},AppendText(param){this._CancelTypewriter();if(typeof param==="number"&&param<1E9)param=Math.round(param*1E10)/1E10;param=param.toString();if(!param)return;this._SetText(this._text+param)},TypewriterText(param,duration){this._CancelTypewriter();if(typeof param==="number"&&param<1E9)param=Math.round(param*1E10)/1E10;this._StartTypewriter(param.toString(),
+duration)},SetFontFace(face,style){let bold=false;let italic=false;switch(style){case 1:bold=true;break;case 2:italic=true;break;case 3:bold=true;italic=true;break}if(face===this._faceName&&bold===this._isBold&&italic===this._isItalic)return;this._SetFontFace(face);this._SetBold(bold);this._SetItalic(italic)},SetFontSize(size){this._SetFontSize(size)},SetFontColor(rgb){tempColor.setFromRgbValue(rgb);tempColor.clamp();this._SetFontColor(tempColor)},SetWebFont(familyName,cssUrl){console.warn("[Text] 'Set web font' action is deprecated and no longer has any effect")},
+SetEffect(effect){this.GetWorldInfo().SetBlendMode(effect);this._runtime.UpdateRender()},TypewriterFinish(){this._FinishTypewriter()},SetLineHeight(lho){this._SetLineHeight(lho)},SetHAlign(h){this._SetHAlign(h)},SetVAlign(v){this._SetVAlign(v)},SetWrapping(w){this._SetWrapByWord(w===0)}};
+
+}
+
+{
+'use strict';const C3=self.C3;C3.Plugins.Text.Exps={Text(){return this._text},PlainText(){if(this._enableBBcode)return C3.BBString.StripAnyTags(this._text);else return this._text},FaceName(){return this._faceName},FaceSize(){return this._ptSize},TextWidth(){return this._GetTextWidth()},TextHeight(){return this._GetTextHeight()},LineHeight(){return this._lineHeightOffset}};
+
+}
+
+{
 "use strict";
 {
-    C3.Plugins.Eponesh_YandexSDK = class YandexSDKPlugin extends C3.SDKDOMPluginBase {
-        constructor(opts) {
-            super(opts, 'Eponesh_YandexSDK');
-
-            this.addHandler('YSDK_ADS_REWARDED_OPEN', (inst, e) => inst.onRewardedOpen(e));
-            this.addHandler('YSDK_ADS_REWARDED_REWARD', (inst, e) => inst.onRewardedReward(e));
-            this.addHandler('YSDK_ADS_REWARDED_CLOSE', (inst, e) => inst.onRewardedClose(e));
-            this.addHandler('YSDK_ADS_REWARDED_ERROR', (inst, e) => inst.onRewardedError(e));
-
-            this.addHandler('SDK_ADS_CLOSED', (inst, e) => inst.onAdvClosed(e));
-            this.addHandler('SDK_RTB_RENDER', (inst, e) => inst.onRTBRender(e));
-        }
-
-        addHandler(handler, cb) {
-            this.AddElementMessageHandler(handler, (_, e) => cb(this.GetSingleGlobalInstance().GetSdkInstance(), e));
-        }
-
-        Release() {
-            super.Release();
-        }
-    };
+	C3.Plugins.VKBridge = class VKBridgePlugin extends C3.SDKPluginBase {
+		constructor(opts){
+			super(opts);
+		}
+		
+		Release(){
+			super.Release();
+		}
+	};
 }
-
 }
 
 {
 "use strict";
 {
-    C3.Plugins.Eponesh_YandexSDK.Type = class YandexSDKType extends C3.SDKTypeBase {
-        constructor(objectClass) {
-            super(objectClass);
-        }
-
-        Release() {
-            super.Release();
-        }
-
-        OnCreate() {}
-    };
+	C3.Plugins.VKBridge.Type = class VKBridgeType extends C3.SDKTypeBase {
+		constructor(objectClass){
+			super(objectClass);
+		}
+		
+		Release(){
+			super.Release();
+		}
+		
+		OnCreate(){}
+	};
 }
-
 }
 
 {
 "use strict";
 {
-    var SDKDOMInstanceBase = globalThis.C3 ? globalThis.C3.SDKDOMInstanceBase : class {}
-    var Instance = class YandexSDKInstance extends SDKDOMInstanceBase {
-        constructor(inst, properties = []) {
-            super(inst, 'Eponesh_YandexSDK');
-            if (!globalThis.C3) {
-                return;
-            }
-            this.conditions = C3.Plugins.Eponesh_YandexSDK.Cnds;
+    var Instance = class VKBridgeInstance extends C3.SDKInstanceBase {
+        constructor(inst, properties = []){
+            super(inst);
+            this.conditions = C3.Plugins.VKBridge.Cnds;
             this.init(properties);
+		}
+		
+        async init(properties){
+			// Properties
+			this.app_id				= properties[0];
+			this.app_secret_key		= properties[1];
+			this.app_service_key	= properties[2];
+			this.subscribe_enabled	= properties[3];
+			// Error
+			this.error_code			= 0;
+			this.error_reason		= "";
+			// User
+			this.user_id			= 0;
+			this.user_token			= "";
+			this.user_rights		= [];
+			this.user_data			= [];
+			// Friends
+			this.friends_count		= 0;
+			this.friends_id			= [];
+			this.friends_data		= [];
+			// Storage
+			this.storage_data_hg	= {};
+			this.storage_set_keys	= [];
+			this.storage_get_keys	= [];
+			this.storage_data		= [];
+			// Leaderboard
+			this.leaderboard_count	= 0;
+			this.leaderboard_data	= [];
+			this.leaderboard_prof	= [];
+			// Client
+			this.client_platform	= "";
+			this.client_version		= "";
+			// Scrips
+			function addScript(src){
+				var script = document.createElement('script');
+				script.src = src;
+				script.async = true;
+				document.head.appendChild(script);
+				script.onload = function(){console.log('Script ' + src + ' loaded');};
+			};
+						
+			addScript('https://vk.com/js/api/xd_connection.js?2');
+			addScript('https://ad.mail.ru/static/admanhtml/rbadman-html5.min.js');
+			addScript('https://vk.com/js/api/adman_init.js');
+							
+			this.AdsReady = function(adman){
+				adman.onStarted(function(){console.log("ShowAdsStart");});
+				adman.onCompleted(function(){console.log("ShowAdsSuccess");});
+				adman.onSkipped(function(){});
+				adman.onClicked(function(){});
+				adman.start('preroll');
+			};
+						
+			this.NoAds = function(){console.log("ShowAdsFailed");};
+			
+			window.addEventListener('load', function(){
+				admanInit({
+					user_id: this.user_id, app_id: this.app_id,
+					// mobile: true,
+					// params: {preview: 1},
+					type: "preloader"}, this.AdsReady, this.NoAds);
+			});
         }
-
-        async init (properties) {
-            this.enableFullscreenOnStart = properties[0];
-            this.setOrientation(properties[1]);
-            this.isOrientationLocked = properties[2];
-
-            this.metricaId = properties[3];
-            this.enableRTB = properties[4];
-
-            this.banners = {};
-            this.isRewardedVideoPlaying = false;
-
-            this.purchases = [];
-            this.products = [];
-
-            this.playerData = {};
-            this.playerStats = {};
-
-            this.currentProductID = '';
-            this.currentProductTitle = '';
-            this.currentProductImage = '';
-            this.currentProductDescription = '';
-            this.currentProductPrice = 0;
-
-            this.currentPurchaseID = '';
-            this.currentPurchaseToken = '';
-            this.currentPurchaseSign = '';
-
-            this.lastPurchaseID = '';
-            this.lastPurchaseToken = '';
-
-            this.lastStateKey = '';
-            this.lastDataKey = '';
-
-            this.player = {
-                name: '',
-                id: '',
-                photoSmall: '',
-                photoMedium: '',
-                photoLarge: ''
-            };
-
-            if (this.metricaId) {
-                this.metricaReady = this.PostToDOMElementAsync('INIT_METRICA', { metricaId: this.metricaId });
-            }
-
-            if (this.enableRTB) {
-                this.rtbReady = this.PostToDOMElementAsync('INIT_RTB');
-            }
-
-            const screen = { fullscreen: this.enableFullscreenOnStart };
-            if (this.fullscreenOrientation !== null) {
-                screen.orientation = {
-                    value: this.fullscreenOrientation,
-                    lock: this.isOrientationLocked
-                };
-            }
-
-            this.ready = this.PostToDOMElementAsync('INIT_SDK', { screen });
-            await this.ready;
-            this.paymentsReady = this._getPayments({ signed: true });
-        }
-
-        Release() {
+		
+        Release(){
             super.Release();
         }
-
-        SaveToJson() {
+        SaveToJson(){
             return {
                 // data to be saved for savegames
             };
         }
-
-        LoadFromJson(o) {
+        LoadFromJson(o){
             // load state for savegames
         }
-
-        GetDebuggerProperties() {
-            return [ {
-                title: "YandexSDK",
-                properties: []
-            }];
-        }
-
-        setOrientation(orientation) {
-            switch (orientation) {
-                case 1: {
-                    this.fullscreenOrientation = 'portrait';
-                    break;
-                }
-                case 2: {
-                    this.fullscreenOrientation = 'landscape';
-                    break;
-                }
-                default: {
-                    this.fullscreenOrientation = null;
-                }
-            }
-        }
-
-        onAdvClosed({ wasShown }) {
-            console.log('Adv was closed, shown:', wasShown);
-            this.Trigger(this.conditions.OnAdvClosed);
-
-            if (this.isFirstAdvClosed) {
-                return;
-            }
-
-            this.isFirstAdvClosed = true;
-            this.Trigger(this.conditions.OnFirstAdvClosed);
-        }
-
-        async getPlayer() {
-            try {
-                const player = await this._getPlayer();
-                this.setPlayer(player);
-            } catch (err) {
-                try {
-                    await this._openAuthDialog();
-                    const player = await this._getPlayer();
-                    this.setPlayer(player);
-                } catch (err) {
-                    this.Trigger(this.conditions.OnSignInFailed);
-                }
-            }
-        }
-
-        async setPlayer(player) {
-            this.player = player;
-            this.playerStats = {};
-            this.playerData = {};
-            this.Trigger(this.conditions.OnSignInSuccess);
-        }
-
-        getPurchase(id) {
-            return this.purchases.find(p => p.productID === id) || {};
-        }
-
-        getProduct(id) {
-            return this.products.find(p => p.productID === id) || {};
-        }
-
-        onRewardedOpen () {
-            this.isRewardedVideoPlaying = true;
-            this.Trigger(this.conditions.OnRewardedVideoOpen);
-        }
-
-        onRewardedReward () {
-            this.Trigger(this.conditions.OnRewardedVideoReward);
-        }
-
-        onRewardedClose () {
-            this.isRewardedVideoPlaying = false;
-            this.Trigger(this.conditions.OnRewardedVideoClose);
-        }
-
-        onRewardedError () {
-            this.Trigger(this.conditions.OnRewardedVideoError);
-        }
-
-        onRTBRender ({ id }) {
-            this.banners[id].displayed = true;
-            this.lastBannerID = id;
-            this.Trigger(this.conditions.OnBannerDisplayed);
-        }
-
-        _getPayments (options) {
-            return this.PostToDOMElementAsync('YSDK_PAYMENTS_GET', options);
-        }
-
-        _getPurchases () {
-            return this.PostToDOMElementAsync('YSDK_PAYMENTS_GET_PURCHASES');
-        }
-
-        _getCatalog () {
-            return this.PostToDOMElementAsync('YSDK_PAYMENTS_GET_CATALOG');
-        }
-
-        _purchase (options) {
-            return this.PostToDOMElementAsync('YSDK_PAYMENTS_PURCHASE', options);
-        }
-
-        _consumePurchase (options) {
-            return this.PostToDOMElementAsync('YSDK_PAYMENTS_CONSUME_PURCHASE', options);
-        }
-
-        _openAuthDialog () {
-            return this.PostToDOMElementAsync('YSDK_AUTH_OPEN');
-        }
-
-        _getPlayer () {
-            return this.PostToDOMElementAsync('YSDK_PLAYER_GET');
-        }
-
-        _showFullscreenAdv () {
-            return this.PostToDOMElementAsync('YSDK_ADS_SHOW_FULLSCREEN');
-        }
-
-        _showRewardedVideo () {
-            return this.PostToDOMElementAsync('YSDK_ADS_SHOW_REWARDED');
-        }
-
-        _getPlayerFullStats () {
-            return this.PostToDOMElementAsync('YSDK_PLAYER_GET_FULL_STATS');
-        }
-
-        _getPlayerStats (payload) {
-            return this.PostToDOMElementAsync('YSDK_PLAYER_GET_STATS', payload);
-        }
-
-        _setPlayerStats (payload) {
-            return this.PostToDOMElementAsync('YSDK_PLAYER_SET_STATS', payload);
-        }
-
-        _incrementPlayerStats (payload) {
-            return this.PostToDOMElementAsync('YSDK_PLAYER_INCREMENT_STATS', payload);
-        }
-
-        _getPlayerFullData () {
-            return this.PostToDOMElementAsync('YSDK_PLAYER_GET_FULL_DATA');
-        }
-
-        _getPlayerData (payload) {
-            return this.PostToDOMElementAsync('YSDK_PLAYER_GET_DATA', payload);
-        }
-
-        _setPlayerData (payload) {
-            return this.PostToDOMElementAsync('YSDK_PLAYER_SET_DATA', payload);
-        }
-
-        _reachGoal (payload) {
-            return this.PostToDOMElement('YSDK_METRICA_REACH_GOAL', payload);
-        }
-
-        _rtbCreateBanner (payload) {
-            return this.PostToDOMElement('YSDK_RTB_CREATE_BANNER', payload);
-        }
-
-        _rtbCreateStickyBanner (payload) {
-            return this.PostToDOMElement('YSDK_RTB_CREATE_STICKY_BANNER', payload);
-        }
-
-        _rtbDestroyBanner (payload) {
-            return this.PostToDOMElement('YSDK_RTB_DESTROY_BANNER', payload);
-        }
-
-        _rtbRefreshBanner (payload) {
-            return this.PostToDOMElement('YSDK_RTB_REFRESH_BANNER', payload);
-        }
-
-        /**
-         * @override
-         * Plugin must be registered as world instance
-         * and required to be rendered on layout, but :) just ignore it
-         */
-        Tick () {
-            return false;
-        }
-    };
-
+		GetScriptInterfaceClass(){
+			return VKBInstance;
+		}
+	};
+	
     if (globalThis.C3) {
-        C3.Plugins.Eponesh_YandexSDK.Instance = Instance;
+        C3.Plugins.VKBridge.Instance = Instance;
     }
 
     Instance;
 }
-
 }
 
 {
 "use strict";
 {
-    function each (runtime, array, cb) {
-        const eventSheetManager = runtime.GetEventSheetManager();
-        const currentEvent = runtime.GetCurrentEvent();
-        const solModifiers = currentEvent.GetSolModifiers();
-        const eventStack = runtime.GetEventStack();
-        // Get current stack frame and push new one
-        const oldFrame = eventStack.GetCurrentStackFrame();
-        const newFrame = eventStack.Push(currentEvent);
-
-        array.forEach((item) => {
-            cb(item);
-
-            // Push a copy of the current SOL
-            eventSheetManager.PushCopySol(solModifiers);
-            // Retrigger the current event, running a single loop iteration
-            currentEvent.Retrigger(oldFrame, newFrame);
-            // Pop the current SOL
-            eventSheetManager.PopSol(solModifiers);
-        });
-
-        // Pop the event stack frame
-        eventStack.Pop();
-    }
-
     var Cnds = {
-        OnAdvClosed() {
-            return true;
-        },
-
-        OnFirstAdvClosed() {
-            return true;
-        },
-
-        OnSignInFailed() {
-            return true;
-        },
-
-        OnSignInSuccess() {
-            return true;
-        },
-
-        IsSignedIn() {
-            return !!this.player;
-        },
-
-        IsPurchasesAvailable() {
-            return !!this.payments;
-        },
-
-        HasAnyPurchase() {
-            return this.purchases.length > 0;
-        },
-
-        OnBuySuccess(purchaseId) {
-            return purchaseId === this.lastPurchaseID;
-        },
-
-        OnBuyFailed(purchaseId) {
-            return purchaseId === this.lastPurchaseID;
-        },
-
-        OnAnyBuySuccess() {
-            return true;
-        },
-
-        OnAnyBuyFailed() {
-            return true;
-        },
-
-        OnPurchasesLoadSuccess() {
-            return true;
-        },
-
-        OnPurchasesLoadFailed() {
-            return true;
-        },
-
-        OnCatalogLoadSuccess() {
-            return true;
-        },
-
-        OnCatalogLoadFailed() {
-            return true;
-        },
-
-        HasPurchase(productId) {
-            return this.purchases.some(p => p.productID === productId);
-        },
-
-        EachProduct() {
-            each(this._runtime, this.products, (product) => {
-                this.currentProductID = product.productID;
-                this.currentProductTitle = product.title;
-                this.currentProductDescription = product.description;
-                this.currentProductImage = product.imageURI;
-                this.currentProductPrice = product.price;
-            });
-
-            return false;
-        },
-
-        EachPurchase() {
-            each(this._runtime, this.purchases, (purchase) => {
-                this.currentPurchaseID = purchase.productID;
-                this.currentPurchaseToken = purchase.purchaseToken;
-                this.currentPurchaseSign = purchase.signature;
-            });
-
-            return false;
-        },
-
-        OnRewardedVideoOpen() {
-            return true;
-        },
-
-        OnRewardedVideoClose() {
-            return true;
-        },
-
-        OnRewardedVideoError() {
-            return true;
-        },
-
-        OnRewardedVideoReward() {
-            return true;
-        },
-
-        IsRewardedVideoPlaying() {
-            return this.isRewardedVideoPlaying;
-        },
-
-        OnIncrementPlayerStateFailed(key) {
-            return key === this.lastStateKey;
-        },
-
-        OnSetPlayerStateFailed(key) {
-            return key === this.lastStateKey;
-        },
-
-        OnSetPlayerDataFailed(key) {
-            return key === this.lastDataKey;
-        },
-
-        OnLoadPlayerStatsSuccess() {
-            return true;
-        },
-
-        OnLoadPlayerStatsFailed() {
-            return true;
-        },
-
-        OnLoadPlayerDataSuccess() {
-            return true;
-        },
-
-        OnLoadPlayerDataFailed() {
-            return true;
-        },
-
-        OnConsumeSuccess(purchaseId) {
-            return purchaseId === this.lastPurchaseID;
-        },
-
-        OnConsumeFailed(purchaseId) {
-            return purchaseId === this.lastPurchaseID;
-        },
-
-        OnAnyConsumeSuccess() {
-            return true;
-        },
-
-        OnAnyConsumeFailed() {
-            return true;
-        },
-
-        OnBannerDisplayed(bannerID) {
-            return bannerID === this.lastBannerID;
-        },
-
-        OnBannerDestroyed(bannerID) {
-            return bannerID === this.lastBannerID;
-        },
-
-        IsBannerDisplaying(bannerID) {
-            const banner = this.banners[bannerID];
-            return !!(banner && banner.displayed);
-        },
-    };
-
+		// Bridge connected
+		BridgeConnectSuccess()				{console.log("VK Bridge connected");																			return true;},
+		// Bridge not connected
+		BridgeConnectFailed()				{console.log("VK Bridge not connected");																		return true;},
+		// User rights confirmed
+		BridgeRightsSuccess(key)			{if(this.user_rights[key]){
+												if (this.user_rights[key] == "success"){
+													console.log("User rights " + key + " confirmed");																		
+													this.user_rights[key] = "";																				return true;}}},
+		// User rights not confirmed
+		BridgeRightsFailed(key)				{if(this.user_rights[key]){
+												if (this.user_rights[key] == "failed"){
+													console.log("User rights " + key + " not confirmed");
+													this.user_rights[key] = "";																				return true;}}},
+		// User is authorized
+		AuthorizationSuccess()				{console.log("User is authorized");																				return true;},
+		// Authorization error
+		AuthorizationFailed()				{console.log("Authorization error");																			return true;},
+		// User data received
+		UserGetSuccess()					{console.log("User data received");																				return true;},
+		// User data not received
+		UserGetFailed()						{console.log("User data not received");																			return true;},
+		// Friends data received
+		FriendsGetSuccess()					{console.log("Friends data received");																			return true;},
+		// Friends data not received
+		FriendsGetFailed()					{console.log("Friends data not received");																		return true;},
+		// User key loaded
+		StorageHGSuccess(user, key)			{if(this.storage_data_hg[key]){
+												let result = "result" + user;
+												let data = this.storage_data_hg[key];
+												if(data[result]){
+													if (data[result] == "success"){
+														console.log("User key " + key + " from user " + user + " loaded");
+														data[result] = "";																					return true;}}}},
+		// User key not loaded
+		StorageHGFailed(user, key)			{if(this.storage_data_hg[key]){
+												let result = "result" + user;
+												let data = this.storage_data_hg[key];
+												if(data[result]){
+													if (data[result] == "failed"){
+														console.log("User key " + key + " from user " + user + " not loaded");
+														data[result] = "";																					return true;}}}},
+		// Variables loaded
+		StorageGetSuccess(key)				{if(this.storage_get_keys[key]){
+												if (this.storage_get_keys[key] == "success"){
+													console.log("Variable " + key + " loaded");
+													this.storage_get_keys[key] = "";																		return true;}}},
+		// Variables not loaded
+		StorageGetFailed(key)				{if(this.storage_get_keys[key]){
+												if (this.storage_get_keys[key] == "failed"){
+													console.log("Variable " + key + " not loaded");		
+													this.storage_get_keys[key] = "";																		return true;}}},
+		// Variable saved
+		StorageSetSuccess(key)				{if(this.storage_set_keys[key]){
+												if (this.storage_set_keys[key] == "success"){
+													console.log("Variable " + key + " saved");
+													this.storage_set_keys[key] = "";																		return true;}}},
+		// Variable not saved
+		StorageSetFailed(key)				{if(this.storage_set_keys[key]){
+												if (this.storage_set_keys[key] == "failed"){
+													console.log("Variable " + key + " not saved");		
+													this.storage_set_keys[key] = "";																		return true;}}},
+		// Friends invited
+		ShowInviteSuccess()					{console.log("Friends invited");																				return true;},
+		// Friends not invited
+		ShowInviteFailed()					{console.log("Friends not invited");																			return true;},
+		// Wall post created
+		ShowWallSuccess()					{console.log("Wall post created");																				return true;},
+		// Wall post failed
+		ShowWallFailed()					{console.log("Wall post failed");																				return true;},
+		// Purchase success
+		ShowOrderSuccess()					{console.log("Purchase success");																				return true;},
+		// Purchase failed
+		ShowOrderFailed()					{console.log("Purchase failed");																				return true;},
+		// Advertising start
+		ShowAdsStart()						{console.log("Advertising start");																				return true;},
+		// Advertising success
+		ShowAdsSuccess()					{console.log("Advertising success");																			return true;},
+		// Advertising failed
+		ShowAdsFailed()						{console.log("Advertising failed");																				return true;},
+		// Advertising skipped
+		ShowAdsSkipped()					{console.log("Advertising skipped");																			return true;},
+		// Advertising clicked
+		ShowAdsClicked()					{console.log("Advertising clicked");																			return true;},
+		// Advertising mobile success
+		AdsMobileSuccess()					{console.log("Advertising success");																			return true;},
+		// Advertising mobile failed
+		AdsMobileFailed()					{console.log("Advertising failed");																				return true;},
+		// Leaderboard mobile success
+		LeaderBoardVKUISuccess()			{console.log("Leaderboard mobile success");																		return true;},
+		// Leaderboard mobile failed
+		LeaderBoardVKUIFailed()				{console.log("Leaderboard mobile failed");																		return true;},
+		// Leaderboard success
+		LeaderBoardSuccess()				{console.log("Leaderboard success");																			return true;},
+		// Leaderboard failed
+		LeaderBoardFailed()					{console.log("Leaderboard failed");																				return true;},
+		// Leadersave success
+		LeaderSaveSuccess()					{console.log("Leadersave success");																				return true;},
+		// Leadersave failed
+		LeaderSaveFailed()					{console.log("Leadersave failed");																				return true;},
+		// Join group success
+		JoinGroupSuccess()					{console.log("Join group success");																				return true;},
+		// Join group failed
+		JoinGroupFailed()					{console.log("Join group failed");																				return true;},
+		// Notification success
+		TapticSuccess()						{console.log("Taptic success");																					return true;},
+		// Notification failed
+		TapticFailed()						{console.log("Taptic failed");																					return true;},		
+		// Notification sent
+		UserNotSuccess()					{console.log("Notification sent");																				return true;},
+		// Notification not sent
+		UserNotFailed()						{console.log("Notification not sent");																			return true;},
+		// App client success
+		AppGetClientSuccess()				{console.log("App client success");																				return true;},
+		// App client failed
+		AppGetClientFailed()				{console.log("App client failed");																				return true;}
+	};
+	
     if (globalThis.C3) {
-        C3.Plugins.Eponesh_YandexSDK.Cnds = Cnds;
+        C3.Plugins.VKBridge.Cnds = Cnds;
     }
 
     Cnds;
 }
-
 }
 
 {
 "use strict";
 {
     var Acts = {
-        async ShowFullscreen() {
-            await this.ready;
-            this._showFullscreenAdv();
-        },
+		// Bridge connect
+		BridgeConnect(token_rights){			
+			// Подключение VK Bridge
+			console.log("Connect VK Bridge");
+			vkBridge.send('VKWebAppInit');
+			// Подключение событий, отправленных нативным клиентом
+			if (this.subscribe_enabled == true) vkBridge.subscribe((e) => console.log(e));
+			
+			// Получение прав доступа
+			vkBridge
+				.send("VKWebAppGetAuthToken", {"app_id": this.app_id, "scope": token_rights})
+				.then(data => {
+					this.user_token = data.access_token;
+					this.Trigger(this.conditions.BridgeConnectSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.BridgeConnectFailed);
+				});
+		},		
+		// Bridge rights
+		BridgeRights(token_rights){
+			// Проверка прав доступа
+			vkBridge
+				.send("VKWebAppCheckAllowedScopes", {"scopes": token_rights})
+				.then(data => {
+					var data_rights = data.result[0];
+					if (data_rights.allowed == true){
+						this.user_rights[token_rights] = "success";
+						this.Trigger(this.conditions.BridgeRightsSuccess);
+					}
+					else {
+						this.user_rights[token_rights] = "failed";
+						if (token_rights == "notify"){
+							// Получение прав доступа для уведомлений
+							vkBridge
+								.send("VKWebAppAllowNotifications")
+								.then(data => {
+									this.user_token = data.access_token;
+									this.user_rights[token_rights] = "success";
+									this.Trigger(this.conditions.BridgeRightsSuccess);
+								})
+								.catch(error => {
+									if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+									this.Trigger(this.conditions.BridgeRightsFailed);
+								});
+						}
+						else {
+							// Получение прав доступа для всех остальных методов
+							vkBridge
+								.send("VKWebAppGetAuthToken", {"app_id": this.app_id, "scope": token_rights})
+								.then(data => {
+									this.user_token = data.access_token;
+									this.user_rights[token_rights] = "success";
+									this.Trigger(this.conditions.BridgeRightsSuccess);
+								})
+								.catch(error => {
+									if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+									this.Trigger(this.conditions.BridgeRightsFailed);
+								});
+						}
+					}
+				})
+		},
+		// Authorization
+		Authorization(){
+			vkBridge
+				.send("VKWebAppGetUserInfo")
+				.then(data => {
+					this.user_id = data["id"];
+					this.Trigger(this.conditions.AuthorizationSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.AuthorizationFailed);
+				});
+		},
+		// User get
+		UserGet(get_user_id, get_fields){
+			vkBridge
+				.send("VKWebAppCallAPIMethod", {"method": "users.get", "request_id": "user", "params": {"user_ids": get_user_id, "fields": get_fields, "v": "5.130", "access_token": this.user_token}})
+				.then(data => {
+					this.user_data = data.response[0];
+					this.Trigger(this.conditions.UserGetSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.UserGetFailed);
+				});
+		},
+		// Friends get
+		FriendsGet(get_fields){
+			vkBridge
+				.send("VKWebAppCallAPIMethod", {"method": "friends.getAppUsers", "request_id": "friends", "params": {"v": "5.130", "access_token": this.user_token}})
+				.then(data => {
+					this.friends_id = data.response;
+					this.friends_count = this.friends_id.length;
+						vkBridge
+							.send("VKWebAppCallAPIMethod", {"method": "users.get", "request_id": "friends", "params": {"user_ids": this.friends_id.join(','), "fields": get_fields, "v": "5.130", "access_token": this.user_token}})
+							.then(data => {
+								this.friends_data = data.response;
+								this.Trigger(this.conditions.FriendsGetSuccess);
+							})
+							.catch(error => {
+								if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+								this.Trigger(this.conditions.FriendsGetFailed);
+							});
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.FriendsGetFailed);
+				});				
+		},
+		// User key
+		StorageHG(user_id, user_key, storage_data){
+			vkBridge
+				.send("VKWebAppCallAPIMethod", {"method": "storage.get", "params": {"user_id": user_id, "key": user_key, "v": "5.131", "access_token": this.app_service_key}})
+				.then(data => {
+					storage_data = data.response[0];
+					let user_result = "result" + user_id;
+					if (storage_data.value == ""){
+						this.storage_data_hg[user_key] = {[user_id]: "", [user_result]: "failed"};
+						this.Trigger(this.conditions.StorageHGFailed);
+					}
+					else {
+						this.storage_data_hg[user_key] = {[user_id]: storage_data.value, [user_result]: "success"};
+						this.Trigger(this.conditions.StorageHGSuccess);
+					}
+				})
+				.catch(error => {});
+		},
+		// Storage get
+		StorageGet(get_keys, keys){
+			var separator = /\s*,\s*/;
+			keys = get_keys.split(separator);
+			
+			vkBridge
+				.send("VKWebAppStorageGet", {"keys": keys})
+				.then(data => {
+					this.storage_data = data.keys;
+					var get_data = "";
+					for (let i = 0; i < this.storage_data.length; i++){
+						get_data = this.storage_data[i];
+						if (get_data.value == ""){
+							this.storage_get_keys[get_data.key] = "failed";
+							this.Trigger(this.conditions.StorageGetFailed);
+						}
+						else {
+							this.storage_get_keys[get_data.key] = "success";
+							this.Trigger(this.conditions.StorageGetSuccess);
+						}
+					};
+				})
+				.catch(error => {});
+		},
+		// Storage set
+		StorageSet(set_keys, set_value){
+			vkBridge
+				.send("VKWebAppStorageSet", {"key": set_keys, "value": set_value})
+				.then(data => {
+					this.storage_set_keys[set_keys] = "success";
+					this.Trigger(this.conditions.StorageSetSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.storage_set_keys[set_keys] = "failed";
+					this.Trigger(this.conditions.StorageSetFailed);
+				});				
+		},
+		// Show invite box
+		ShowInvite(){
+			vkBridge
+				.send("VKWebAppShowInviteBox")
+				.then(data => {
+					this.Trigger(this.conditions.ShowInviteSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.ShowInviteFailed);
+				});				
+		},
+		// Create post
+		ShowWall(message, attachments){
+			vkBridge
+				.send("VKWebAppShowWallPostBox", {"message": message, "attachments": attachments})
+				.then(data => {
+					this.Trigger(this.conditions.ShowWallSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.ShowWallFailed);
+				});				
+		},
+		// Purchase item
+		ShowOrder(item){
+			vkBridge
+				.send("VKWebAppShowOrderBox", {"type": "item", "item": item})
+				.then(data => {
+					this.Trigger(this.conditions.ShowOrderSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.ShowOrderFailed);
+				});				
+		},
+		// Advertising web
+		async ShowAds(format, mobile){
+			// Properties
+			var ads = true;
+			var promise = "";
+			var result = "";
+			var callback = "";
+			var skipped = "";
+			var clicked = "";
+			// Format ads
+			var ads_format = "rewarded";
+			if (format === 0) ads_format = "preloader";
+			// Style ads
+			var ads_mobile = true;
+			if (mobile === 0) ads_mobile = false;
+			// Loading advertising
+			console.log("Loading advertising: " + ads_format);
+			// Advertising displayed
+			do {
+				// Load ads
+				if (ads){admanInit({user_id: this.user_id, app_id: this.app_id, mobile: ads_mobile, type: ads_format}, onAdsReady, onNoAds);ads = false;}
+				// Timeout trigger
+				promise = new Promise((resolve, reject) => {setTimeout(() => resolve("timeout"), 1000)});
+				// Trigger
+				result = await promise;
+				if (callback == "error"){this.Trigger(this.conditions.ShowAdsFailed);}
+				else if (callback == "start"){this.Trigger(this.conditions.ShowAdsStart);callback = "";}
+				else if (callback == "success"){this.Trigger(this.conditions.ShowAdsSuccess);}
+				else {console.log("Advertising displayed");}
+				if (skipped == "yes"){this.Trigger(this.conditions.ShowAdsSkipped);skipped = "no";}
+				if (clicked == "yes"){this.Trigger(this.conditions.ShowAdsClicked);clicked = "no";}
+			} while (callback == "");
+			
+			// Ads loading
+			function onAdsReady(adman){
+				adman.onStarted(function(){callback = "start";});
+				adman.onCompleted(function(){callback = "success";});
+				adman.onSkipped(function(){if (skipped == ""){skipped = "yes";}});
+				adman.onClicked(function(){if (clicked == ""){clicked = "yes";}});
+				adman.start('preroll');
+			};
+			// Ads not loading
+			function onNoAds(){callback = "error";};
 
-        async CreateBanner(id, x = 0, y = 0, width = 0, height = 0, styles) {
-            if (!this.banners[id]) {
-                this.banners[id] = { displayed: false };
-                await this.rtbReady;
-                this._rtbCreateBanner({ id, x, y, width, height, styles });
-            }
-        },
-
-        async CreateStickyBanner(id, position = 0, width = 0, height = 0, styles) {
-            if (!this.banners[id]) {
-                this.banners[id] = { displayed: false };
-                await this.rtbReady;
-                this._rtbCreateStickyBanner({ id, position, width, height, styles });
-            }
-        },
-
-        async DisplayBanner(id) {
-            if (this.banners[id]) {
-                await this.rtbReady;
-                this._rtbDisplayBanner({ id });
-            }
-        },
-
-        async RefreshBanner(id) {
-            if (this.banners[id]) {
-                await this.rtbReady;
-                this.banners[id].displayed = false;
-                this._rtbRefreshBanner({ id });
-            }
-        },
-
-        async DestroyBanner(id) {
-            if (this.banners[id]) {
-                await this.rtbReady;
-                this.banners[id].displayed = false;
-                this.lastBannerID = id;
-                this._rtbDestroyBanner({ id });
-                this.Trigger(this.conditions.OnBannerDestroyed);
-            }
-        },
-
-        async ReachGoal(target) {
-            await this.metricaReady;
-            console.log('Reach Goal: ', target);
-            this._reachGoal({ target });
-        },
-
-        async SignIn() {
-            await this.getPlayer();
-        },
-
-        async LoadCatalog() {
-            try {
-                await this.paymentsReady;
-                this.products = await this._getCatalog();
-                this.Trigger(this.conditions.OnCatalogLoadSuccess);
-            } catch (err) {
-                this.Trigger(this.conditions.OnCatalogLoadFailed);
-            }
-        },
-
-        async LoadPurchases(isAutoSignIn) {
-            if (isAutoSignIn) {
-                try {
-                    await this.getPlayer();
-                } catch (err) {
-                    this.Trigger(this.conditions.OnPurchasesLoadFailed);
-                }
-            }
-
-            try {
-                await this.paymentsReady;
-                this.purchases = await this._getPurchases();
-                this.Trigger(this.conditions.OnPurchasesLoadSuccess);
-            } catch (err) {
-                this.Trigger(this.conditions.OnPurchasesLoadFailed);
-            }
-        },
-
-        async Buy(purchaseId) {
-            try {
-                await this.paymentsReady;
-                const purchase = await this._purchase({ purchaseId });
-                this.purchases.push(purchase);
-                this.lastPurchaseID = purchaseId;
-                this.lastPurchaseToken = purchase.purchaseToken;
-                this.Trigger(this.conditions.OnAnyBuySuccess);
-                this.Trigger(this.conditions.OnBuySuccess);
-            } catch (err) {
-                this.lastPurchaseID = purchaseId;
-                this.Trigger(this.conditions.OnAnyBuyFailed);
-                this.Trigger(this.conditions.OnBuyFailed);
-            }
-        },
-
-        async ShowRewardedVideo() {
-            await this.ready;
-            try {
-                await this._showRewardedVideo();
-            } catch (error) {
-                this.Trigger(this.conditions.OnRewardedVideoError);
-            }
-        },
-
-        async ConsumePurchase(id) {
-            const purchase = this.purchases.find(p => p.productID === id);
-            try {
-                await this.paymentsReady;
-                await this._consumePurchase({ purchaseToken: purchase.purchaseToken });
-                this.purchases = this.purchases.filter(p => p.productID !== id);
-                this.lastPurchaseID = id;
-                this.lastPurchaseToken = purchase ? purchase.token : '';
-                this.Trigger(this.conditions.OnAnyConsumeSuccess);
-                this.Trigger(this.conditions.OnConsumeSuccess);
-            } catch (err) {
-                this.lastPurchaseID = id;
-                this.lastPurchaseToken = purchase ? purchase.token : '';
-                this.Trigger(this.conditions.OnAnyConsumeFailed);
-                this.Trigger(this.conditions.OnConsumeFailed);
-            }
-        },
-
-        async IncrementState(key, value) {
-            if (this.playerStats[key]) {
-                this.playerStats[key] += value;
-            } else {
-                this.playerStats[key] = value;
-            }
-
-            try {
-                await this._incrementPlayerStats({ [key]: value });
-                const stats = await this._getPlayerStats([key]);
-                this.playerStats[key] = stats[key] || 0;
-            } catch (error) {
-                this.lastStateKey = key;
-                this.Trigger(this.conditions.OnIncrementPlayerStateFailed);
-            }
-        },
-
-        async SetState(key, value) {
-            this.playerStats[key] = value;
-            try {
-                await this._setPlayerStats( {[key]: value });
-                const stats = await this._getPlayerStats([key]);
-                this.playerStats[key] = stats[key] || 0;
-            } catch (error) {
-                this.lastStateKey = key;
-                this.Trigger(this.conditions.OnSetPlayerStateFailed);
-            }
-        },
-
-        async SetData(key, value) {
-            this.playerData[key] = value;
-            try {
-                await this._setPlayerData({ [key]: value });
-                const data = await this._getPlayerData([key]);
-                this.playerData[key] = data[key] || '';
-            } catch (error) {
-                this.lastDataKey = key;
-                this.Trigger(this.conditions.OnSetPlayerDataFailed);
-            }
-        },
-
-        async LoadStats() {
-            try {
-                this.playerStats = (await this._getPlayerFullStats()) || {};
-                this.Trigger(this.conditions.OnLoadPlayerStatsSuccess);
-            } catch (err) {
-                this.Trigger(this.conditions.OnLoadPlayerStatsFailed);
-            }
-        },
-
-        async LoadData() {
-            try {
-                this.playerData = (await this._getPlayerFullData()) || {};
-                this.Trigger(this.conditions.OnLoadPlayerDataSuccess);
-            } catch (err) {
-                this.Trigger(this.conditions.OnLoadPlayerDataFailed);
-            }
-        }
-    };
-
+		},
+		// Advertising mobile
+		AdsMobile(format){
+			
+			var ads_format = "interstitial";
+			if (format === 0) ads_format = "preloader";
+			else if (format === 1) ads_format = "reward";
+			
+			vkBridge
+				.send("VKWebAppShowNativeAds", {"ad_format": ads_format})
+				.then(data => {
+					this.Trigger(this.conditions.AdsMobileSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.AdsMobileFailed);
+				});				
+		},
+		// Leaderboard VKUI
+		LeaderBoardVKUI(result, global){
+			vkBridge
+				.send("VKWebAppShowLeaderBoardBox", {"user_result": result, "global": global})
+				.then(data => {
+					this.Trigger(this.conditions.LeaderBoardVKUISuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.LeaderBoardVKUIFailed);
+				});				
+		},
+		// Leaderboard
+		LeaderBoard(type, global, leaderboard_field){
+			var leader_type = "score";
+			if (type === 0) leader_type = "level";
+			
+			vkBridge
+				.send("VKWebAppCallAPIMethod", {"method": "apps.getLeaderboard", "request_id": "board", "params": {"type": leader_type, "global": global, "extended": 1, "v": "5.130", "access_token": this.user_token}})
+				.then(data => {
+					var data = data.response;
+					this.leaderboard_count = data.count;
+					this.leaderboard_data = data.items;
+					
+					let i = 0;
+					var board_data = [];
+					var board_id = [];
+					do {
+						board_data = this.leaderboard_data[i];
+						board_id[i] = board_data["user_id"];
+						i++;
+						if (i == this.leaderboard_count){
+							vkBridge
+								.send("VKWebAppCallAPIMethod", {"method": "users.get", "request_id": "userboard", "params": {"user_ids": board_id.join(','), "fields": leaderboard_field, "v": "5.130", "access_token": this.user_token}})
+								.then(data => {
+									this.leaderboard_prof = data.response;
+									this.Trigger(this.conditions.LeaderBoardSuccess);
+								})
+								.catch(error => {
+									if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+									this.Trigger(this.conditions.LeaderBoardFailed);
+								});
+						}
+					} while (i < this.leaderboard_count);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.LeaderBoardFailed);
+				});				
+		},
+		// Save leaderboard
+		LeaderSave(activ, value){
+			vkBridge
+				.send("VKWebAppCallAPIMethod", {"method": "secure.addAppEvent", "request_id": "leader", "params": {"user_id": this.user_id, "activity_id": activ+1, "value": value, "v": "5.130", "access_token": this.app_service_key, "client_secret": this.app_secret_key}})
+				.then(data => {
+					this.Trigger(this.conditions.LeaderSaveSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.LeaderSaveFailed);
+				});				
+		},
+		// Join group
+		JoinGroup(group_id){
+			vkBridge
+				.send("VKWebAppJoinGroup", {"group_id": group_id})
+				.then(data => {
+					this.Trigger(this.conditions.JoinGroupSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.JoinGroupFailed);
+				});
+		},
+		// Taptic
+		Taptic(style){
+			var taptic_style = "heavy";
+			if (style === 0) taptic_style = "light";
+			else if (style === 1) taptic_style = "medium";
+			
+			vkBridge
+				.send("VKWebAppTapticImpactOccurred", {"style": taptic_style})
+				.then(data => {
+					this.Trigger(this.conditions.TapticSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.TapticFailed);
+				});				
+		},		
+		// User notification
+		UserNot(user_id, message){
+			vkBridge
+				.send("VKWebAppCallAPIMethod", {"method": "secure.sendNotification", "params": {"user_id": user_id, "message": message, "v": "5.131", "access_token": this.app_service_key}})
+				.then(data => {
+					this.Trigger(this.conditions.UserNotSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.UserNotFailed);
+				});				
+		},
+		// App client
+		AppGetClient(){
+			vkBridge
+				.send("VKWebAppGetClientVersion")
+				.then(data => {
+					this.client_platform = data.platform;
+					this.client_version = data.version;
+					this.Trigger(this.conditions.AppGetClientSuccess);
+				})
+				.catch(error => {
+					if (error.error_data){var error_data = error.error_data;this.error_code = error_data["error_code"];this.error_reason = error_data["error_reason"];}
+					this.Trigger(this.conditions.AppGetClientFailed);
+				});
+		}
+	};
+	
     if (globalThis.C3) {
-        C3.Plugins.Eponesh_YandexSDK.Acts = Acts;
+        C3.Plugins.VKBridge.Acts = Acts;
     }
 
     Acts;
 }
-
 }
 
 {
 "use strict";
 {
-    var Exps = {
-        PlayerName() {
-            return this.player.name;
-        },
-
-        PlayerId() {
-            return this.player.id;
-        },
-
-        PlayerPhotoSmall() {
-            return this.player.photoSmall;
-        },
-
-        PlayerPhotoMedium() {
-            return this.player.photoMedium;
-        },
-
-        PlayerPhotoLarge() {
-            return this.player.photoLarge;
-        },
-
-        CurrentProductID() {
-            return this.currentProductID || '';
-        },
-
-        CurrentProductTitle() {
-            return this.currentProductTitle || '';
-        },
-
-        CurrentProductImage() {
-            return this.currentProductImage || '';
-        },
-
-        CurrentProductDescription() {
-            return this.currentProductDescription || '';
-        },
-
-        CurrentProductPrice() {
-            return this.currentProductPrice || 0;
-        },
-
-        CurrentPurchaseID() {
-            return this.currentPurchaseID || '';
-        },
-
-        CurrentPurchaseToken() {
-            return this.currentPurchaseToken || '';
-        },
-
-        CurrentPurchaseSign() {
-            return this.currentPurchaseSign || '';
-        },
-
-        GetPurchaseToken(productId) {
-            return this.getPurchase(productId).purchaseToken || '';
-        },
-
-        LastPurchaseId() {
-            return this.lastPurchaseID || '';
-        },
-
-        LastPurchaseToken() {
-            return this.lastPurchaseToken || '';
-        },
-
-        GetProductTitle(productId) {
-            return this.getProduct(productId).title || '';
-        },
-
-        GetProductDescription(productId) {
-            return this.getProduct(productId).description || '';
-        },
-
-        GetProductImage(productId) {
-            return this.getProduct(productId).imageURI || '';
-        },
-
-        GetProductPrice(productId) {
-            return parseFloat(this.getProduct(productId).price || 0);
-        },
-
-        LastPlayerStateKey() {
-            return this.lastStateKey || '';
-        },
-
-        LastPlayerDataKey() {
-            return this.lastDataKey || '';
-        },
-
-        GetPlayerState(key) {
-            return this.playerStats[key] || 0;
-        },
-
-        GetPlayerData(key) {
-            return this.playerData[key] || '';
-        },
-
-        LastBanner() {
-            return this.lastBannerID;
-        }
-    };
-
-    if (globalThis.C3) {
-        C3.Plugins.Eponesh_YandexSDK.Exps = Exps;
+	var Exps = {
+		// Error
+		ErrorCode()							{return this.error_code;},
+		ErrorReason()						{return this.error_reason;},
+		// User
+		UserID()							{return this.user_id;},
+		UserRights(type)					{if (this.user_rights[type]){return this.user_rights[type];};},
+		UserData(type)						{if (this.user_data[type]){return this.user_data[type];};},
+		// Friends
+		FriendsCount()						{return this.friends_count;},
+		FriendsData(number, type, data)		{if (this.friends_data[number]){data = this.friends_data[number];if (data[type]){return data[type];};};},
+		// Storage
+		StorageUser(user, key, data)		{if (this.storage_data_hg[key]){data = this.storage_data_hg[key];if (data[user]){return data[user];};};},
+		StorageData(keys)					{for (let i = 0; i < this.storage_data.length; i++){if (this.storage_data[i].key === keys){return this.storage_data[i].value;break;};};},
+		// Leaderboard
+		BoardCount()						{return this.leaderboard_count;},
+		BoardData(number, type, data)		{if (this.leaderboard_data[number]){data = this.leaderboard_data[number];if (data[type]){return data[type];};};},
+		BoardProf(number, type, data)		{if (this.leaderboard_prof[number]){data = this.leaderboard_prof[number];if (data[type]){return data[type];};};},
+		// Client
+		ClientPlatform()					{return this.client_platform;},
+		ClientVersion()						{return this.client_version;}
+	}
+	
+    if (globalThis.C3){
+        C3.Plugins.VKBridge.Exps = Exps;
     }
 
     Exps;
 }
-
 }
 
 {
@@ -4968,7 +4874,13 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.Mouse,
 		C3.Plugins.Audio,
 		C3.Plugins.Touch,
-		C3.Plugins.Eponesh_YandexSDK,
+		C3.Plugins.Text,
+		C3.Plugins.VKBridge,
+		C3.Plugins.System.Cnds.OnLayoutStart,
+		C3.Plugins.VKBridge.Acts.BridgeConnect,
+		C3.Plugins.VKBridge.Cnds.BridgeConnectSuccess,
+		C3.Plugins.VKBridge.Acts.Authorization,
+		C3.Plugins.VKBridge.Acts.AppGetClient,
 		C3.Plugins.System.Cnds.IsGroupActive,
 		C3.Behaviors.Platform.Cnds.IsMoving,
 		C3.Plugins.Sprite.Acts.SetWidth,
@@ -5000,7 +4912,15 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.Sprite.Acts.SetAnimSpeed,
 		C3.Plugins.Audio.Acts.Play,
 		C3.Plugins.Sprite.Cnds.OnCollision,
-		C3.Plugins.System.Acts.RestartLayout
+		C3.Plugins.System.Cnds.CompareVar,
+		C3.Plugins.System.Acts.SetVar,
+		C3.Plugins.System.Exps.int,
+		C3.Plugins.System.Exps.random,
+		C3.Plugins.System.Acts.GoToLayout,
+		C3.Plugins.System.Acts.RestartLayout,
+		C3.Plugins.System.Acts.ResetGlobals,
+		C3.Plugins.VKBridge.Acts.AdsMobile,
+		C3.Plugins.Mouse.Cnds.OnObjectClicked
 	];
 };
 self.C3_JsPropNameTable = [
@@ -5011,6 +4931,8 @@ self.C3_JsPropNameTable = [
 	{Ground2: 0},
 	{Ground3: 0},
 	{Ground4: 0},
+	{Ground5: 0},
+	{Ground6: 0},
 	{СквознаяПлатформа: 0},
 	{Platform: 0},
 	{Platform2: 0},
@@ -5037,6 +4959,7 @@ self.C3_JsPropNameTable = [
 	{PlayerRun: 0},
 	{СледитьЗа: 0},
 	{Camera: 0},
+	{Player2: 0},
 	{Liana: 0},
 	{Moss: 0},
 	{Liana2: 0},
@@ -5071,8 +4994,24 @@ self.C3_JsPropNameTable = [
 	{Button_R: 0},
 	{Button_U: 0},
 	{Тач: 0},
-	{YandexSDK: 0},
-	{Attack_L: 0}
+	{DestroyLayoutOutSide: 0},
+	{Solid: 0},
+	{Sprite2: 0},
+	{GiantSword_2: 0},
+	{GiantSword_3: 0},
+	{GiantSword_4: 0},
+	{GiantSword_5: 0},
+	{GiantSword_6: 0},
+	{BG_Color2: 0},
+	{Pillar2: 0},
+	{Text: 0},
+	{Text2: 0},
+	{Text3: 0},
+	{Text4: 0},
+	{VKBridge: 0},
+	{Attack_L: 0},
+	{Checpoint: 0},
+	{Reklama: 0}
 ];
 }
 
@@ -5173,6 +5112,7 @@ function or(l, r)
 }
 
 self.C3_ExpressionFuncs = [
+		() => "",
 		() => "PLAYER CONTROL",
 		() => "ANIMATION",
 		p => {
@@ -5218,7 +5158,28 @@ self.C3_ExpressionFuncs = [
 		},
 		() => "Default",
 		() => 24,
-		() => ""
+		() => 2856,
+		() => 754,
+		p => {
+			const f0 = p._GetNode(0).GetBoundMethod();
+			const f1 = p._GetNode(1).GetBoundMethod();
+			return () => f0(f1(0, 3));
+		},
+		() => 2,
+		() => 7582,
+		() => 174,
+		() => 3,
+		() => 12716,
+		() => 290,
+		() => 4,
+		() => 16456,
+		() => 638,
+		() => 5,
+		() => 18326,
+		() => 232,
+		() => 6,
+		() => 20740,
+		() => 812
 ];
 
 
